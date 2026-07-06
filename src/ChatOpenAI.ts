@@ -23,7 +23,7 @@ export default class ChatOpenAI {
     constructor(model: string, systemPrompt: string = '', tools: Tool[] = [], context: string = ''){
         this.llm = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
-            //baseURL: process.env.OPENAI_BASE_URL
+            baseURL: process.env.OPENAI_BASE_URL
         })
 
         this.model = model;

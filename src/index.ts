@@ -1,7 +1,8 @@
 import ChatOpenAI from "./ChatOpenAI.js";
+import MCPClient from "./MCPClient.js";
 
 
-async function main(){
+/* async function main(){
     const llm = new ChatOpenAI("gpt-4o-mini");
     const {content, toolCalls} = await llm.chat('hello');
 
@@ -9,4 +10,16 @@ async function main(){
     console.log(toolCalls);
 }
 
-main()
+main() */
+
+async function main(){
+    const fetchMCP = new MCPClient('fetch', 'uvx', ['mcp-server-fetch']);
+    await fetchMCP.init();
+
+    const tools = fetchMCP.getTools();
+    console.log(tools);
+
+    await fetchMCP.close();
+}
+
+main();

@@ -44,7 +44,8 @@ export default class MCPClient {
         try {
             this.transport = new StdioClientTransport({
                 command: this.command,
-                args: this.args
+                args: this.args,
+                stderr: "inherit",
             });
 
             await this.mcp.connect(this.transport);

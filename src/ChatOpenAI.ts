@@ -42,7 +42,7 @@ export default class ChatOpenAI {
         logTitle("CHAT");
 
         if(prompt){
-            this.messages.push({role: "user", content: prompt})
+            this.messages.push({role: "user", content: prompt});
         }
 
         const stream = await this.llm.chat.completions.create({
@@ -54,7 +54,7 @@ export default class ChatOpenAI {
 
 
         let content = '';
-        let toolCalls = [];
+        let toolCalls: ToolCall[] = [];
 
         logTitle("RESPONSE");
 
@@ -62,14 +62,17 @@ export default class ChatOpenAI {
             const delta = chunk.choices[0]?.delta;
 
             if(delta?.content){
-                const contentChunk = delta.content;
+                const contentChunk = delta.content || "";
                 content += contentChunk;
                 process.stdout.write(contentChunk);
             }
 
             if(delta?.tool_calls){
                 for(const toolCallChunk of delta.tool_calls){
-                    toolCalls.push({id: "", function: {name: "", arguments: ""}})
+
+                    if (toolCalls.length <= toolCallChunk.index) {
+                      toolCalls.push({ id: '', function: { name: '', arguments: '' } });
+                    }
 
                     let currentCall = toolCalls[toolCallChunk.index]!;
 
@@ -85,28 +88,33 @@ export default class ChatOpenAI {
                         currentCall.function.arguments += toolCallChunk.function.arguments;
                     }
                 }
-            }
-
-        this.messages.push({ role: "assistant", content: content, tool_calls: toolCalls.map(call => ({ id: call.id, type: "function", function: call.function })) });
-
-     
-    
+            }    
         }
-    
-        return {
-            content,
-            toolCalls
-        };
+
+         this.messages.push({ role: "assistant", content: content, tool_calls: toolCalls.map(call => ({ id: call.id, type: "function", function: call.function })) });
+         return {
+                content,
+                toolCalls
+             };
  }
 
     private getToolsDefinition(){
         return this.tools.map(tool => ({
             type: "function" as const,
             function: {
-                ...tool,
-                description: tool.description ?? ''
-            }
+                name: tool.name,
+                description: tool.description || "",
+                parameters: tool.inputSchema,
+            },
         }))
+    }
+
+    appendToolResult(toolCallId: string, toolOutput: string){
+        this.messages.push({
+            role: "tool",
+            content: toolOutput,
+            tool_call_id: toolCallId
+        });
     }
 
 }
